@@ -1,0 +1,7 @@
+[workspace]
+members = ["oleaf", "oleaf-hook"]
+
+[profile.release]
+codegen-units = 1
+lto = "fat"
+incremental = false

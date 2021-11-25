@@ -1,0 +1,24 @@
+[package]
+name = "oleaf"
+version = "0.1.0"
+authors = ["Valentin B. <valentin.be@protonmail.com>"]
+license = "MIT"
+readme = "../README.md"
+repository = "https://github.com/project-yggdrasil/oleaf"
+edition = "2021"
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+oleaf-hook = { path = "../oleaf-hook" }
+
+[dependencies.windows]
+version = "0.28"
+features = [
+    "Win32_Foundation",
+    "Win32_System_Console",
+    "Win32_System_LibraryLoader",
+    "Win32_System_SystemServices",
+    "Win32_System_Threading",
+]
