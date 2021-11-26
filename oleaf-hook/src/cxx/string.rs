@@ -43,12 +43,10 @@ impl Impl {
     }
 
     // SAFETY: This function may only be called when no SSO was
-    // employed, i.e. the input string was shorter than 16 chars,
+    // employed, i.e. the input string was longer than 16 chars,
     // and when `Impl::from_rust` was used to obtain this object.
     pub unsafe fn free_rust(&mut self) {
-        unsafe {
-            let _ = CString::from_raw(self.ptr);
-        }
+        let _ = unsafe { CString::from_raw(self.ptr) };
     }
 }
 
