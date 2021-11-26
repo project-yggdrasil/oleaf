@@ -5,3 +5,6 @@
 
 mod string;
 pub use self::string::{String, Str};
+
+mod vector;
+pub use self::vector::Vector;

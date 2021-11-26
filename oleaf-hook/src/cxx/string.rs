@@ -5,7 +5,7 @@ use std::{
 };
 
 #[repr(C)]
-pub union Impl {
+union Impl {
     // Invariant 1: One byte must always be reserved for trailing null.
     // Invariant 2: No `\0` in the middle of the string supported.
     buf: [c_char; Self::SSO_LEN],
@@ -103,7 +103,7 @@ impl String {
         Ok(Self {
             ipl: unsafe { Impl::from_rust(data, size)? },
             size,
-            capacity: size // We don't care about allocating extra space
+            capacity: size, // We don't care about allocating extra space
         })
     }
 
@@ -111,7 +111,7 @@ impl String {
     ///
     /// The underlying data is guaranteed to be valid Rust string data
     /// when all safety rules of this type were respected.
-    pub unsafe fn view(&mut self) -> &CStr {
+    pub fn view(&mut self) -> &CStr {
         unsafe {
             if self.size < Impl::SSO_LEN {
                 CStr::from_ptr(self.ipl.buf.as_mut_ptr())
@@ -134,11 +134,16 @@ impl Drop for String {
 /// An ABI-compatible `std::string` that is borrowed from the C++ side.
 ///
 /// This represents a null-terminated string created and managed by C++
-/// code to which an immutable view on the Rust side was obtained.
+/// code to which an immutable view on the Rust side is granted.
 ///
 /// No assumptions are made on the underlying data and caution must be
 /// applied for the special kind of programmers who use `std::string`
 /// as a storage for binary data.
+/// 
+/// # Safety
+/// 
+/// The user must ensure that their handle to a [`Str`] instance does not
+/// outlive the corresponding object on the C++ side.
 #[repr(C)]
 pub struct Str {
     ipl: Impl,
@@ -152,8 +157,12 @@ impl Str {
     /// # Safety
     ///
     /// This function is unsafe for the same reasons as [`CStr::from_ptr`].
+    ///
     /// The underlying pointers and pointed-to data originate purely
     /// from C++ code without any form of scrutiny.
+    ///
+    /// The inferred lifetime may not match the lifetime duration of the object
+    /// on the C++ side.
     pub unsafe fn view(&mut self) -> &CStr {
         unsafe {
             if self.size < Impl::SSO_LEN {
