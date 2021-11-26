@@ -8,5 +8,7 @@ extern crate static_assertions;
 
 pub mod cxx;
 
+pub mod eventhook;
+
 pub mod module;
 pub use self::module::Module;
