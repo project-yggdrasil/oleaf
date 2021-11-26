@@ -8,6 +8,8 @@ extern crate static_assertions;
 
 pub mod cxx;
 
+pub mod dml;
+
 pub mod eventhook;
 
 pub mod module;

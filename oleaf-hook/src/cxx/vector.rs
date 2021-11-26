@@ -87,7 +87,7 @@ impl<T> Vector<T> {
     pub unsafe fn as_slice(&self) -> &[T] {
         if self.head.is_null() {
             // Constructing a slice at address 0 is undefined behavior.
-            // We will use a filler type here.
+            // We will use a filler value here.
             &[]
         } else {
             unsafe { slice::from_raw_parts(self.head, self.len()) }

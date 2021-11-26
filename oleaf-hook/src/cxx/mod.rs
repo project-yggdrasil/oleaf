@@ -8,3 +8,6 @@ pub use self::string::{String, Str};
 
 mod vector;
 pub use self::vector::Vector;
+
+mod wstring;
+pub use self::wstring::{WString, WStr};
