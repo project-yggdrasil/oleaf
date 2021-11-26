@@ -10,3 +10,5 @@ pub mod cxx;
 
 pub mod module;
 pub use self::module::Module;
+
+pub mod eventhook;

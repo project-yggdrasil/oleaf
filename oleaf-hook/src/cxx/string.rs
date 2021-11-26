@@ -83,6 +83,7 @@ impl Impl {
 pub struct String {
     ipl: Impl,
     size: c_size_t,
+    capacity: c_size_t,
 }
 
 impl String {
@@ -102,6 +103,7 @@ impl String {
         Ok(Self {
             ipl: unsafe { Impl::from_rust(data, size)? },
             size,
+            capacity: size // We don't care about allocating extra space
         })
     }
 
@@ -141,6 +143,7 @@ impl Drop for String {
 pub struct Str {
     ipl: Impl,
     size: c_size_t,
+    capacity: c_size_t,
 }
 
 impl Str {
