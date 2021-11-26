@@ -2,7 +2,6 @@ use detour::static_detour;
 
 use crate::cxx;
 
-
 static_detour! {
     pub static SendEventHook: fn(i64, i64, i64) -> i64;
 }
