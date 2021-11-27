@@ -38,7 +38,9 @@ assert_eq_size!(Field, [u8; 0x78]);
 ///
 #[repr(C)]
 pub struct Record {
-    _00: [u8; 0x20],
+    vtable: *mut c_void,
+    _08: [u8; 0x10],
+    ref_count: u32, // std::atomic?
     fields: cxx::Vector<Field>,
 }
 
