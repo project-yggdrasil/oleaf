@@ -17,6 +17,8 @@ pub enum TypeId {
     Dbl = 8,
     Str = 9,
     WStr = 10,
+
+    Unknown(u8),
 }
 
 ///
@@ -30,7 +32,9 @@ pub struct Field {
     wstr_storage: *mut cxx::WStr,
     gid_storage: c_ulonglong, // XXX: gid union?
     type_id: TypeId,
-    _31: [u8; 0x47],
+    _38: [u8; 0x18],
+    name: cxx::String,
+    _70: [u8; 0x8],
 }
 
 assert_eq_size!(Field, [u8; 0x78]);

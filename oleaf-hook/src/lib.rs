@@ -1,7 +1,7 @@
 //!
 
 #![deny(unsafe_op_in_unsafe_fn, rustdoc::broken_intra_doc_links)]
-#![feature(c_size_t)]
+#![feature(arbitrary_enum_discriminant, c_size_t)]
 
 #[macro_use]
 extern crate static_assertions;
