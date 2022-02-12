@@ -137,9 +137,9 @@ impl Drop for String {
 /// No assumptions are made on the underlying data and caution must be
 /// applied for the special kind of programmers who use `std::string`
 /// as a storage for binary data.
-/// 
+///
 /// # Safety
-/// 
+///
 /// The user must ensure that their handle to a [`Str`] instance does not
 /// outlive the corresponding object on the C++ side.
 #[repr(C)]

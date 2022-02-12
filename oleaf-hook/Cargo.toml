@@ -8,7 +8,10 @@ repository = "https://github.com/project-yggdrasil/oleaf"
 edition = "2021"
 
 [dependencies]
-detour = "0.8.0"
+oleaf-hook-macros = { path = "../oleaf-hook-macros" }
+
+detour = "0.8"
+linkme = "0.2"
 static_assertions = "1"
 
 [dependencies.windows]

@@ -6,11 +6,13 @@
 #[macro_use]
 extern crate static_assertions;
 
+pub use oleaf_hook_macros::*;
+
 pub mod cxx;
 
 pub mod dml;
 
-pub mod eventhook;
+pub mod event;
 
 pub mod module;
 pub use self::module::Module;

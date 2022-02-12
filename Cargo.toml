@@ -1,5 +1,5 @@
 [workspace]
-members = ["oleaf", "oleaf-hook"]
+members = ["oleaf", "oleaf-hook", "oleaf-hook-macros"]
 
 [profile.release]
 codegen-units = 1

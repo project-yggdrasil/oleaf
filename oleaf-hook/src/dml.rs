@@ -73,9 +73,8 @@ impl Field {
     ///
     /// # Safety
     ///
-    /// The lifetime of `self` and thus also the inferred lifetime of the
-    /// [`FieldValue`] may not be representative of the real lifetime of
-    /// the data.
+    /// The lifetime of the result may not be representative of the real
+    /// lifetime of the data.
     ///
     /// The caller is responsible for ensuring the availability of the
     /// requested data.
@@ -117,9 +116,8 @@ impl Record {
     ///
     /// # Safety
     ///
-    /// The lifetime of `self` and thus also the inferred lifetime of the
-    /// return value may not be representative of the real lifetime of
-    /// the data.
+    /// The lifetime of the result may not be representative of the real
+    /// lifetime of the data.
     ///
     /// The caller is responsible for ensuring the availability of the
     /// requested data.

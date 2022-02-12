@@ -13,8 +13,12 @@ crate-type = ["cdylib"]
 [dependencies]
 oleaf-hook = { path = "../oleaf-hook" }
 
+# Don't remove these dependencies for `oleaf-hook-macros`.
+detour = "0.8"
+linkme = "0.2"
+
 [dependencies.windows]
-version = "0.28"
+version = "0.32"
 features = [
     "Win32_Foundation",
     "Win32_System_Console",
