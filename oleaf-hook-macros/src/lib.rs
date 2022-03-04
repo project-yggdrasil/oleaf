@@ -111,7 +111,8 @@ fn expand(func: ItemFn, event: LitStr) -> Result<TokenStream2> {
                 let mut event = ::oleaf_hook::cxx::String::new(#event)
                     .expect(::core::concat!("Got invalid handler name: ", #event, "!"));
                 if let Option::Some(ptr) = ::oleaf_hook::event::find_event_by_name(dispatcher, &mut event) {
-                    ::oleaf_hook::paging::with_read_write_page(ptr, 0x10, || {
+                    ::oleaf_hook::paging::with_read_write_page(ptr, 0x100, || {
+                        ::std::println!(::core::concat!("Found ", #event, " at {:#p}"), ptr);
                         // ...and detour it.
                         #detour_ident.initialize(
                             ::core::mem::transmute::<_, __EventDetourFn>(ptr),

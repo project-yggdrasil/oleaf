@@ -68,7 +68,7 @@ unsafe fn main(module: HINSTANCE, call_reason: u32) -> Result<(), Box<dyn Error>
                 ptr::null_mut(),
             );
 
-            initialize_detours()
+            Ok(())
         }
         DLL_PROCESS_DETACH => {
             Console::FreeConsole().ok()?;
