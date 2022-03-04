@@ -99,7 +99,7 @@ fn expand(func: ItemFn, event: LitStr) -> Result<TokenStream2> {
 
             #[allow(unsafe_op_in_unsafe_fn)]
             #[::linkme::distributed_slice(::oleaf_hook::event::INIT_EVENT_DETOURS)]
-            unsafe fn __install_detour(dispatcher: &mut ::oleaf_hook::event::Dispatcher) {
+            unsafe fn __install_detour(dispatcher: *mut ::std::os::raw::c_void) {
                 use ::core::{option::Option, result::Result};
 
                 // Opt out if the event handler for this function is already installed.
@@ -108,15 +108,22 @@ fn expand(func: ItemFn, event: LitStr) -> Result<TokenStream2> {
                 }
 
                 // See if we can query the handler for our event...
-                if let Result::Ok(Option::Some(handler)) = dispatcher.get_handler_by_name(#event) {
-                    // ...and detour it.
-                    #detour_ident.initialize(
-                        ::core::mem::transmute::<_, __EventDetourFn>(handler.callback),
-                        #ident,
-                    )
-                    .expect(::core::concat!("Failed to install detour for ", #event, "!"));
-                    #detour_ident.enable()
-                        .expect(::core::concat!("Failed to enable detour for ", #event, "!"));
+                let mut event = ::oleaf_hook::cxx::String::new(#event)
+                    .expect(::core::concat!("Got invalid handler name: ", #event, "!"));
+                if let Option::Some(ptr) = ::oleaf_hook::event::find_event_by_name(dispatcher, &mut event) {
+                    ::oleaf_hook::paging::with_read_write_page(ptr, 0x10, || {
+                        // ...and detour it.
+                        #detour_ident.initialize(
+                            ::core::mem::transmute::<_, __EventDetourFn>(ptr),
+                            #ident,
+                        )
+                        .unwrap_or_else(|e| {
+                            ::core::panic!(::core::concat!("Failed to install detour for ", #event, ": {}!"), e);
+                        });
+                        #detour_ident.enable()
+                            .expect(::core::concat!("Failed to enable detour for ", #event));
+                    })
+                    .expect("Failed to alter page table permissions to read/write!");
                 }
             }
 
@@ -133,7 +140,7 @@ fn expand(func: ItemFn, event: LitStr) -> Result<TokenStream2> {
             // Injected into scope for use by the function author.
             macro_rules! call_original {
                 ($($tt:tt)*) => {
-                    unsafe { #detour_ident.call($($tt)*) }
+                    #detour_ident.call($($tt)*)
                 };
             }
 

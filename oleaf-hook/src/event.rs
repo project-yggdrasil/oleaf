@@ -1,4 +1,4 @@
-use std::{ffi::NulError, os::raw::c_void};
+use std::{lazy::SyncOnceCell, os::raw::c_void};
 
 use detour::static_detour;
 
@@ -7,45 +7,19 @@ use crate::cxx;
 // Not part of the public API. Used by generated code.
 #[doc(hidden)]
 #[linkme::distributed_slice]
-pub static INIT_EVENT_DETOURS: [unsafe fn(&mut Dispatcher)] = [..];
+pub static INIT_EVENT_DETOURS: [unsafe fn(*mut c_void)] = [..];
 
 // Not part of the public API. Used by generated code.
 #[doc(hidden)]
 #[linkme::distributed_slice]
 pub static UNHOOK_EVENT_DETOURS: [unsafe fn()] = [..];
 
-/// Representation of KingsIsle's event dispatcher type.
-pub struct Dispatcher {}
-
-impl Dispatcher {
-    /// Gets an event handler by its string name.
-    ///
-    /// # Safety
-    ///
-    /// The lifetime of the result may not be representative of the real
-    /// lifetime of the data.
-    ///
-    /// It is within the caller's responsibility to ensure the availability
-    /// at access.
-    pub unsafe fn get_handler_by_name(&mut self, str: &str) -> Result<Option<&Handler>, NulError> {
-        // Build the arguments for the call to the C++ function.
-        let _self_ptr = self as *mut Self;
-        let _cxx_string = unsafe { cxx::String::new(str)? };
-
-        todo!("call to the handler getter by vtable and wrap the result")
-    }
-}
-
-/// Representation of KingsIsle's event handler type.
-#[repr(C)]
-pub struct Handler {}
-
 static_detour! {
     /// The detour for installing custom event handlers.
     ///
     /// The crate user should install [`send_event_detour`] to this hook.
     pub static SendEventHook: unsafe extern "fastcall" fn(
-        /* dispatcher: */ *mut Dispatcher,
+        /* dispatcher: */ *mut c_void,
         /* name: */ *mut cxx::Str,
         /* unknown: */ *mut c_void
     ) -> *mut c_void;
@@ -53,7 +27,41 @@ static_detour! {
 
 /// The function signature for [`SendEventHook`] detours.
 pub type FnSendEvent =
-    unsafe extern "fastcall" fn(*mut Dispatcher, *mut cxx::Str, *mut c_void) -> *mut c_void;
+    unsafe extern "fastcall" fn(*mut c_void, *mut cxx::Str, *mut c_void) -> *mut c_void;
+
+/// The function signature for a dispatcher's event handler getter.
+pub type FnGetEventHandler = extern "fastcall" fn(*mut c_void, *mut cxx::String) -> *mut c_void;
+
+static EVENT_HANDLER_GETTER: SyncOnceCell<FnGetEventHandler> = SyncOnceCell::new();
+
+/// Initializes the global event handler getter to the given functions.
+///
+/// # Panics
+///
+/// Panics if the callback has already been initialized previously.
+pub fn initialize_event_handler_getter(func: FnGetEventHandler) {
+    EVENT_HANDLER_GETTER.set(func).unwrap_or_else(|eg| {
+        panic!(
+            "Failed to initialize event handler getter to {:#p}!",
+            eg as *const c_void
+        )
+    });
+}
+
+/// Attempts to find an event handler by name, returning a pointer to its
+/// callback function on success.
+pub fn find_event_by_name(dispatcher: *mut c_void, name: &mut cxx::String) -> Option<*mut c_void> {
+    let handler = EVENT_HANDLER_GETTER
+        .get()
+        .expect("Event handler getter was not yet initialized!");
+
+    let ptr = handler(dispatcher, name as *mut cxx::String);
+    if !ptr.is_null() {
+        Some(ptr)
+    } else {
+        None
+    }
+}
 
 /// A detour for [`SendEventHook`] that is used to install custom event
 /// handlers for data exfiltration.
@@ -68,21 +76,20 @@ pub type FnSendEvent =
 /// # Safety
 ///
 /// C++ land. Do not try to call this yourself.
-#[allow(unsafe_op_in_unsafe_fn)]
+#[allow(clippy::not_unsafe_ptr_arg_deref, unsafe_op_in_unsafe_fn)]
 #[inline(never)]
-pub unsafe extern "fastcall" fn send_event_detour(
-    dispatcher: *mut Dispatcher,
+pub fn send_event_detour(
+    dispatcher: *mut c_void,
     name: *mut cxx::Str,
     unk: *mut c_void,
 ) -> *mut c_void {
     // Get a handle to the dispatcher object and call all event detour installers.
-    let dispatcher = &mut *dispatcher;
     for ptr in INIT_EVENT_DETOURS {
-        ptr(dispatcher);
+        unsafe { ptr(dispatcher) }
     }
 
     // Call the original C++ function.
-    SendEventHook.call(dispatcher, name, unk)
+    unsafe { SendEventHook.call(dispatcher, name, unk) }
 }
 
 /// Unhooks all event handler detours that were set up by [`send_event_detour`].
